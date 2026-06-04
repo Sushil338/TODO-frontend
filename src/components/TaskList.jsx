@@ -1,12 +1,10 @@
 import TaskItem from "./TaskItem";
 
 function TaskList({ tasks, deleteTask, updateTask, toggleComplete }) {
-
-  // 🔹 Empty state
   if (!tasks || tasks.length === 0) {
     return (
-      <div className="text-center text-gray-400 mt-4">
-        No tasks found 🚀
+      <div className="mt-4 text-center text-gray-400">
+        No tasks found
       </div>
     );
   }

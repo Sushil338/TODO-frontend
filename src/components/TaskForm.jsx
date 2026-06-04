@@ -6,6 +6,7 @@ function TaskForm({ addTask, closeForm }) {
     title: "",
     description: "",
     deadline: "",
+    importance: "MEDIUM",
   });
 
   const [error, setError] = useState("");
@@ -30,6 +31,7 @@ function TaskForm({ addTask, closeForm }) {
     const formattedTask = {
       ...task,
       deadline: formatDateTime(task.deadline),
+      importance: task.importance || "MEDIUM",
       completed: false,
     };
 
@@ -68,6 +70,17 @@ function TaskForm({ addTask, closeForm }) {
         onChange={handleChange}
         className="border p-2 w-full rounded"
       />
+
+      <select
+        name="importance"
+        value={task.importance}
+        onChange={handleChange}
+        className="w-full rounded border p-2"
+      >
+        <option value="LOW">Low importance</option>
+        <option value="MEDIUM">Medium importance</option>
+        <option value="HIGH">High importance</option>
+      </select>
 
       <div className="flex gap-2">
         <button

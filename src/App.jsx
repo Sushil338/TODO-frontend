@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "./context/AuthContext";
+import AiPanel from "./components/AiPanel";
+import AuthPage from "./components/AuthPage";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
+import UserMenu from "./components/UserMenu";
 import {
   createTask,
   deleteTask as deleteTaskAPI,
@@ -8,7 +12,7 @@ import {
   updateTask as updateTaskAPI,
 } from "./services/taskServices";
 
-function App() {
+function TaskManager() {
   const [tasks, setTasks] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState("all");
@@ -17,6 +21,7 @@ function App() {
   const [size] = useState(5);
   const [totalPages, setTotalPages] = useState(0);
   const [error, setError] = useState("");
+  const [aiRefreshKey, setAiRefreshKey] = useState(0);
 
   const fetchTasks = useCallback(
     async (pageToLoad = page) => {
@@ -52,23 +57,30 @@ function App() {
     fetchTasks();
   }, [fetchTasks]);
 
+  const refreshAi = () => {
+    setAiRefreshKey((currentKey) => currentKey + 1);
+  };
+
   const addTask = async (task) => {
     setError("");
     await createTask(task);
     setPage(0);
     await fetchTasks(0);
+    refreshAi();
   };
 
   const handleDelete = async (id) => {
     setError("");
     await deleteTaskAPI(id);
     await fetchTasks();
+    refreshAi();
   };
 
   const handleUpdate = async (id, updatedTask) => {
     setError("");
     await updateTaskAPI(id, updatedTask);
     await fetchTasks();
+    refreshAi();
   };
 
   const toggleComplete = async (task) => {
@@ -78,6 +90,7 @@ function App() {
       completed: !task.completed,
     });
     await fetchTasks();
+    refreshAi();
   };
 
   const handleFilterChange = (nextFilter) => {
@@ -90,73 +103,112 @@ function App() {
     setPage(0);
   };
 
+  const filterButtonClass = (value) =>
+    `rounded px-3 py-1 text-sm ${
+      filter === value ? "bg-gray-900 text-white" : "bg-gray-200 text-gray-700"
+    }`;
+
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center items-center">
-      <div className="bg-white p-6 rounded-xl shadow-md w-[420px]">
-        <h1 className="text-xl font-bold mb-4">Task Manager</h1>
+    <div className="min-h-screen bg-gray-100 px-4 py-8">
+      <div className="mx-auto grid w-full max-w-5xl gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <main className="rounded-xl bg-white p-6 shadow-md">
+          <h1 className="mb-4 text-xl font-bold">Task Manager</h1>
 
-        <div className="flex gap-2 mb-3">
-          <button onClick={() => handleFilterChange("all")}>All</button>
-          <button onClick={() => handleFilterChange("completed")}>
-            Completed
-          </button>
-          <button onClick={() => handleFilterChange("pending")}>Pending</button>
-        </div>
+          <UserMenu />
 
-        <input
-          placeholder="Search..."
-          value={search}
-          onChange={handleSearchChange}
-          className="border p-2 w-full mb-3"
-        />
+          <div className="mb-3 flex gap-2">
+            <button
+              onClick={() => handleFilterChange("all")}
+              className={filterButtonClass("all")}
+            >
+              All
+            </button>
+            <button
+              onClick={() => handleFilterChange("completed")}
+              className={filterButtonClass("completed")}
+            >
+              Completed
+            </button>
+            <button
+              onClick={() => handleFilterChange("pending")}
+              className={filterButtonClass("pending")}
+            >
+              Pending
+            </button>
+          </div>
 
-        {error && <p className="mb-3 text-sm text-red-500">{error}</p>}
-
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-blue-500 text-white px-4 py-2 rounded mb-4 w-full"
-        >
-          {showForm ? "Close" : "Add Task"}
-        </button>
-
-        {showForm && (
-          <TaskForm
-            addTask={addTask}
-            closeForm={() => setShowForm(false)}
+          <input
+            placeholder="Search..."
+            value={search}
+            onChange={handleSearchChange}
+            className="mb-3 w-full rounded border p-2"
           />
-        )}
 
-        <TaskList
-          tasks={tasks}
-          deleteTask={handleDelete}
-          updateTask={handleUpdate}
-          toggleComplete={toggleComplete}
-        />
-
-        <div className="flex justify-between items-center mt-4">
-          <button
-            onClick={() => setPage((currentPage) => currentPage - 1)}
-            disabled={page === 0}
-            className="bg-gray-300 px-3 py-1 rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-
-          <span className="text-sm">
-            Page {totalPages === 0 ? 0 : page + 1} of {totalPages}
-          </span>
+          {error && <p className="mb-3 text-sm text-red-500">{error}</p>}
 
           <button
-            onClick={() => setPage((currentPage) => currentPage + 1)}
-            disabled={totalPages === 0 || page >= totalPages - 1}
-            className="bg-gray-300 px-3 py-1 rounded disabled:opacity-50"
+            onClick={() => setShowForm(!showForm)}
+            className="mb-4 w-full rounded bg-blue-600 px-4 py-2 text-white"
           >
-            Next
+            {showForm ? "Close" : "Add Task"}
           </button>
-        </div>
+
+          {showForm && (
+            <TaskForm addTask={addTask} closeForm={() => setShowForm(false)} />
+          )}
+
+          <TaskList
+            tasks={tasks}
+            deleteTask={handleDelete}
+            updateTask={handleUpdate}
+            toggleComplete={toggleComplete}
+          />
+
+          <div className="mt-4 flex items-center justify-between">
+            <button
+              onClick={() => setPage((currentPage) => currentPage - 1)}
+              disabled={page === 0}
+              className="rounded bg-gray-300 px-3 py-1 disabled:opacity-50"
+            >
+              Prev
+            </button>
+
+            <span className="text-sm">
+              Page {totalPages === 0 ? 0 : page + 1} of {totalPages}
+            </span>
+
+            <button
+              onClick={() => setPage((currentPage) => currentPage + 1)}
+              disabled={totalPages === 0 || page >= totalPages - 1}
+              className="rounded bg-gray-300 px-3 py-1 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </main>
+
+        <AiPanel onTaskCreated={addTask} refreshKey={aiRefreshKey} />
       </div>
     </div>
   );
+}
+
+function App() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-100 text-sm text-gray-600">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <AuthPage />;
+  }
+
+  return <TaskManager />;
 }
 
 export default App;

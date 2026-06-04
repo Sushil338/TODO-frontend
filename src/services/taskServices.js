@@ -1,11 +1,4 @@
-import axios from "axios";
-
-const API_URL = "http://localhost:8080/api/tasks";
-
-const api = axios.create({
-  baseURL: API_URL,
-  headers: { "Content-Type": "application/json" },
-});
+import api from "./api";
 
 export const formatDateTime = (dateStr) => {
   if (!dateStr) return null;
@@ -28,8 +21,17 @@ export const formatDisplayDateTime = (dateStr) => {
   return parsed.toLocaleString();
 };
 
-export const getTasks = (params) => api.get("", { params });
+export const getTasks = (params) => api.get("/tasks", { params });
 
-export const createTask = (task) => api.post("", task);
-export const updateTask = (id, task) => api.put(`/${id}`, task);
-export const deleteTask = (id) => api.delete(`/${id}`);
+export const createTask = (task) => api.post("/tasks", task);
+export const updateTask = (id, task) => api.put(`/tasks/${id}`, task);
+export const deleteTask = (id) => api.delete(`/tasks/${id}`);
+
+export const parseNaturalLanguageTask = (text) =>
+  api.post("/ai/parse-task", { text });
+
+export const getPrioritizedTasks = () => api.get("/ai/prioritize");
+
+export const getProductivityInsights = () => api.get("/ai/insights");
+
+export const askAiQuestion = (question) => api.post("/ai/chat", { question });

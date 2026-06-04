@@ -9,6 +9,7 @@ function TaskItem({ task, deleteTask, updateTask, toggleComplete }) {
   const buildFormState = () => ({
     ...task,
     deadline: toDateTimeInputValue(task.deadline),
+    importance: task.importance || "MEDIUM",
   });
 
   const [editing, setEditing] = useState(false);
@@ -42,6 +43,7 @@ function TaskItem({ task, deleteTask, updateTask, toggleComplete }) {
     const updatedTask = {
       ...form,
       deadline: formatDateTime(form.deadline),
+      importance: form.importance || "MEDIUM",
     };
 
     try {
@@ -84,11 +86,22 @@ function TaskItem({ task, deleteTask, updateTask, toggleComplete }) {
             className="border p-1 w-full rounded"
           />
 
+          <select
+            name="importance"
+            value={form.importance || "MEDIUM"}
+            onChange={handleChange}
+            className="w-full rounded border p-1"
+          >
+            <option value="LOW">Low importance</option>
+            <option value="MEDIUM">Medium importance</option>
+            <option value="HIGH">High importance</option>
+          </select>
+
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
               name="completed"
-              checked={form.completed}
+              checked={Boolean(form.completed)}
               onChange={handleChange}
             />
             Completed
@@ -131,6 +144,10 @@ function TaskItem({ task, deleteTask, updateTask, toggleComplete }) {
             >
               {formatDisplayDateTime(task.deadline)}
             </p>
+
+            <span className="mt-1 inline-block rounded bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
+              {task.importance || "MEDIUM"}
+            </span>
           </div>
 
           <input
