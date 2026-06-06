@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const API_URL = "http://localhost:8080/api";
+export const API_URL = import.meta.env.VITE_API_URL;
 export const AUTH_TOKEN_KEY = "todo_auth_token";
 export const AUTH_USER_KEY = "todo_auth_user";
 

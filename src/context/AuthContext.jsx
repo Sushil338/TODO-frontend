@@ -8,7 +8,6 @@ import {
   logout as logoutRequest,
   persistAuth,
   register as registerRequest,
-  updateProfile as updateProfileRequest,
 } from "../services/authService";
 
 const AuthContext = createContext(null);
@@ -96,12 +95,18 @@ export function AuthProvider({ children }) {
   }, [applyAuth]);
 
   const register = useCallback(async (payload) => {
+    // Simply forward request to backend; it sends OTP and does NOT return a token yet
     const response = await registerRequest(payload);
-    applyAuth(response); // <-- Accesses response.data.token and response.data.user
+    return response.data; // Will contain { message: "...", email: "..." }
+  }, []);
+
+  const verifyOtp = useCallback(async (email, otp) => {
+    const response = await import("../services/authService").then(m => m.verifyRegisterOtp({ email, otp }));
+    // Once OTP matches, backend provides the token and user entity
+    applyAuth(response);
     return response.data.user;
   }, [applyAuth]);
 
-  
   const logout = useCallback(async () => {
     try {
       if (getStoredToken()) {
@@ -116,11 +121,15 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const updateProfile = useCallback(async (payload) => {
-    const response = await updateProfileRequest(payload);
-    applyAuth(response);
-    return response.data.user;
-  }, [applyAuth]);
+  const sendForgotPasswordOtp = useCallback(async (email) => {
+  const response = await import("../services/authService").then(m => m.forgotPassword({ email }));
+  return response.data;
+}, []);
+
+const submitPasswordReset = useCallback(async (email, otp, newPassword) => {
+  const response = await import("../services/authService").then(m => m.resetPassword({ email, otp, newPassword }));
+  return response.data;
+}, []);
 
   const value = useMemo(
     () => ({
@@ -130,11 +139,13 @@ export function AuthProvider({ children }) {
       isAuthenticated,
       login,
       register,
+      verifyOtp,
+      sendForgotPasswordOtp,
+      submitPasswordReset,
       logout,
-      updateProfile,
       refreshProfile,
     }),
-    [user, token, loading, isAuthenticated, login, register, logout, updateProfile, refreshProfile]
+    [user, token, loading, isAuthenticated, login, register, verifyOtp, sendForgotPasswordOtp, submitPasswordReset, logout, refreshProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
