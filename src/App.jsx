@@ -5,6 +5,7 @@ import AuthPage from "./components/AuthPage";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
 import UserMenu from "./components/UserMenu";
+import LandingPage from "./components/LandingPage";
 import {
   createTask,
   deleteTask as deleteTaskAPI,
@@ -108,6 +109,8 @@ function TaskManager() {
       filter === value ? "bg-gray-900 text-white" : "bg-gray-200 text-gray-700"
     }`;
 
+  
+
   return (
     <div className="min-h-screen bg-gray-100 px-4 py-8">
       <div className="mx-auto grid w-full max-w-5xl gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -195,6 +198,7 @@ function TaskManager() {
 
 function App() {
   const { isAuthenticated, loading } = useAuth();
+  const [showAuthScreen, setShowAuthScreen] = useState(false);
 
   if (loading) {
     return (
@@ -204,11 +208,26 @@ function App() {
     );
   }
 
-  if (!isAuthenticated) {
-    return <AuthPage />;
+  if (isAuthenticated) {
+    return <TaskManager />;
   }
 
-  return <TaskManager />;
+  if (showAuthScreen) {
+    return (
+      <div className="relative min-h-screen bg-gray-100">
+        <button
+          onClick={() => setShowAuthScreen(false)}
+          className="absolute top-4 left-4 rounded bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-gray-800 transition shadow"
+        >
+          &larr; Back to Home
+        </button>
+        <AuthPage />
+      </div>
+    );
+  }
+
+  // Default fallback: Show the shiny landing page first!
+  return <LandingPage onGetStarted={() => setShowAuthScreen(true)} />;
 }
 
 export default App;
